@@ -1,46 +1,32 @@
-require('dotenv').config();
-const express = require('express');
+import 'dotenv/config';
+import express, { json } from 'express';
 const app = express();
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const router = require("./router")
-const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
-
-mongoose.connect('mongodb://localhost:27017/DgGramDB',
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  }
-);
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error: "));
-db.once("open", function () {
-  console.log("Connected successfully");
-});
+import cors from 'cors';
+import router from './src/routes/index.js';
+import cookieParser from 'cookie-parser';
+import DB from './model/index.js';
+import GlobalExceptionHandler from './src/controllers/errorController.js';
 
 app.use(cookieParser());
 const corsOption = {
-  credentials: true,
-  origin: ['http://localhost:3000']
+    credentials: true,
+    origin: ['http://localhost:3000'],
 };
 
 app.use(cors(corsOption));
-app.use('/storage', express.static('storage'))
-// DbConnect();
-app.use(bodyParser.json({ limit: '8mb' }));
-app.use(express.json());
 
-app.use(router)
+await DB();
+// app.use(bodyParser.json({ limit: '8mb' }));
+app.use(json());
 
 app.get('/', (req, res) => {
-  res.send('Hello from express.');
+    res.send('Hello from express.');
 });
 
+app.use('/api', router);
+app.use(GlobalExceptionHandler);
 
 const PORT = process.env.PORT || 5500;
 app.listen(PORT, () => {
-  console.log(`server is runing on ${PORT}`);
-})
-
-
+    console.log(`server is runing on ${PORT}`);
+});
