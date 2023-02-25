@@ -1,50 +1,58 @@
-import { Sequelize, DataTypes } from 'sequelize';
+import { Sequelize } from 'sequelize';
 import User from './user.js';
 import Follower from './follower.js';
-// import Roles from './roles';
-// import UserRoles from './userRoles';
+import Post from './post.js';
+import PostLike from './postLike.js';
+import PostComment from './postComment.js';
+import Chat from './chat.js';
+import UsersRoom from './usersRoom.js';
 
-const DB = async () => {
-    const sequelize = new Sequelize(
-        process.env.MYSQL_DB,
-        process.env.MYSQL_USER,
-        process.env.MYSQL_PASSWORD,
-        {
-            host: process.env.MYSQL_HOST,
-            dialect: 'mysql',
-            logging: false,
-            dialectOptions: {
-                // useUTC: false,
-                dateStrings: true,
-                typeCast: true,
-            },
-            timezone: '+05:30',
-        }
-    );
+const MySqlDB = async () => {
+  // import Config from "./config";
 
-    try {
-        await sequelize.authenticate();
-        console.log('Connection has been established successfully (MySql).');
+  // Server Config Changed
+  const sequelize = new Sequelize({
+    database: process.env.MYSQL_DB,
+    username: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    host: process.env.MYSQL_HOST,
+    dialect: 'mysql',
+    logging: false,
+    dialectOptions: {
+      // useUTC: false,
+      dateStrings: true,
+      typeCast: true,
+    },
+    timezone: '+05:30',
+  });
+  try {
+    await sequelize.authenticate();
+    console.log('Connected to MySQL Database Successfully!!');
 
-        const db = {
-            sequelize: sequelize,
-            User: User(sequelize, DataTypes),
-            Follower: Follower(sequelize, DataTypes),
-        };
+    const DB = {
+      sequelize,
+      User: User(sequelize),
+      Follower: Follower(sequelize),
+      Post: Post(sequelize),
+      PostLike: PostLike(sequelize),
+      PostComment: PostComment(sequelize),
+      Chat: Chat(sequelize),
+      UsersRoom: UsersRoom(sequelize),
+    };
 
-        Object.keys(db).forEach((modelName) => {
-            if (db[modelName].associate) {
-                db[modelName].associate(db);
-            }
-        });
+    // Setting the association of model
+    Object.keys(DB).forEach((modelName) => {
+      if (DB[modelName].associate) {
+        DB[modelName].associate(DB);
+      }
+    });
 
-        // // ------ DANGER TO UNCOMMENT ------
-        // await sequelize.sync({ force: true });
-
-        global.DB = db;
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
+    // await sequelize.sync({ force: true });
+    global.DB = DB;
+  } catch (error) {
+    console.log('MySqlDB Error: ', error);
+    console.log('Error in Connecting to MySQL');
+  }
 };
 
-export default DB;
+export default MySqlDB;

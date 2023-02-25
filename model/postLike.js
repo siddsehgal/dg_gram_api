@@ -1,8 +1,8 @@
 import { Model, DataTypes } from 'sequelize';
 
-class Follower extends Model {}
+class PostLike extends Model {}
 const InitModel = (connection) => {
-  Follower.init(
+  PostLike.init(
     {
       // Model attributes are defined here
       id: {
@@ -15,7 +15,7 @@ const InitModel = (connection) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      follower_id: {
+      post_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -30,14 +30,14 @@ const InitModel = (connection) => {
     {
       timestamps: true,
       sequelize: connection,
-      modelName: 'Follower',
-      tableName: 'follower',
+      modelName: 'PostLike',
+      tableName: 'post_likes',
     }
   );
-  console.log('Follower Model Running');
+  console.log('PostLike Model Running');
 
-  // await Follower.sync({ alter: true });
-  return Follower;
+  // await PostLike.sync({ alter: true });
+  return PostLike;
 };
 
 export default InitModel;

@@ -5,8 +5,9 @@ const router = express.Router();
 
 router.use(authController.jwtVerify);
 router.get('/', userController.getUserData);
+router.patch('/', userController.updateUserData);
 
 // Search User List by UserName
-router.get('/search-users', userController.getUsersByUserName);
+router.get('/search-by-user-name', userController.getUsersByUserName);
 
 export default router;

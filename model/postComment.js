@@ -1,8 +1,8 @@
 import { Model, DataTypes } from 'sequelize';
 
-class Follower extends Model {}
+class PostComment extends Model {}
 const InitModel = (connection) => {
-  Follower.init(
+  PostComment.init(
     {
       // Model attributes are defined here
       id: {
@@ -15,8 +15,12 @@ const InitModel = (connection) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      follower_id: {
+      post_id: {
         type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      comment: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       status: {
@@ -30,14 +34,14 @@ const InitModel = (connection) => {
     {
       timestamps: true,
       sequelize: connection,
-      modelName: 'Follower',
-      tableName: 'follower',
+      modelName: 'PostComment',
+      tableName: 'post_comments',
     }
   );
-  console.log('Follower Model Running');
+  console.log('PostComment Model Running');
 
-  // await Follower.sync({ alter: true });
-  return Follower;
+  // await PostComment.sync({ alter: true });
+  return PostComment;
 };
-
+export { PostComment as PostCommentModelType };
 export default InitModel;

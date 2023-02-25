@@ -1,8 +1,16 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 
-class Follower extends Model {}
+class Chat extends Model {
+  static associate(models) {
+    this.belongsTo(models.UsersRoom, {
+      as: 'room_data',
+      foreignKey: 'room_id',
+      targetKey: 'id',
+    });
+  }
+}
 const InitModel = (connection) => {
-  Follower.init(
+  Chat.init(
     {
       // Model attributes are defined here
       id: {
@@ -11,12 +19,16 @@ const InitModel = (connection) => {
         allowNull: false,
         primaryKey: true,
       },
-      user_id: {
+      room_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      follower_id: {
+      from: {
         type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      message: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       status: {
@@ -30,14 +42,15 @@ const InitModel = (connection) => {
     {
       timestamps: true,
       sequelize: connection,
-      modelName: 'Follower',
-      tableName: 'follower',
+      modelName: 'Chat',
+      tableName: 'chats',
     }
   );
-  console.log('Follower Model Running');
 
-  // await Follower.sync({ alter: true });
-  return Follower;
+  console.log('Chat Model Running');
+
+  // await Chat.sync({ alter: true });
+  return Chat;
 };
 
 export default InitModel;

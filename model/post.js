@@ -1,8 +1,26 @@
 import { Model, DataTypes } from 'sequelize';
 
-class Follower extends Model {}
+class Post extends Model {
+  static associate(models) {
+    this.hasMany(models.PostLike, {
+      sourceKey: 'id',
+      foreignKey: 'post_id',
+      as: 'post_likes',
+    });
+    this.hasMany(models.PostComment, {
+      sourceKey: 'id',
+      foreignKey: 'post_id',
+      as: 'post_comments',
+    });
+    this.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      as: 'user_data',
+    });
+  }
+}
+
 const InitModel = (connection) => {
-  Follower.init(
+  Post.init(
     {
       // Model attributes are defined here
       id: {
@@ -15,8 +33,8 @@ const InitModel = (connection) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      follower_id: {
-        type: DataTypes.INTEGER,
+      content: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       status: {
@@ -30,14 +48,15 @@ const InitModel = (connection) => {
     {
       timestamps: true,
       sequelize: connection,
-      modelName: 'Follower',
-      tableName: 'follower',
+      modelName: 'Post',
+      tableName: 'posts',
     }
   );
-  console.log('Follower Model Running');
 
-  // await Follower.sync({ alter: true });
-  return Follower;
+  console.log('Post Model Running');
+
+  // await Post.sync({ alter: true });
+  return Post;
 };
 
 export default InitModel;

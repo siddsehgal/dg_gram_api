@@ -1,8 +1,8 @@
 import { Model, DataTypes } from 'sequelize';
 
-class Follower extends Model {}
+class UsersRoom extends Model {}
 const InitModel = (connection) => {
-  Follower.init(
+  UsersRoom.init(
     {
       // Model attributes are defined here
       id: {
@@ -11,12 +11,8 @@ const InitModel = (connection) => {
         allowNull: false,
         primaryKey: true,
       },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      follower_id: {
-        type: DataTypes.INTEGER,
+      users: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       status: {
@@ -30,14 +26,14 @@ const InitModel = (connection) => {
     {
       timestamps: true,
       sequelize: connection,
-      modelName: 'Follower',
-      tableName: 'follower',
+      modelName: 'UsersRoom',
+      tableName: 'users_rooms',
     }
   );
-  console.log('Follower Model Running');
+  console.log('UsersRoom Model Running');
 
-  // await Follower.sync({ alter: true });
-  return Follower;
+  // await UsersRoom.sync({ alter: true });
+  return UsersRoom;
 };
-
+// export { UsersRoom as UsersRoomType };
 export default InitModel;
