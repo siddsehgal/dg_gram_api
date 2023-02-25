@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import ErrorResponse from '../utils/errorResponse.js';
 
 class userController {
   static getUserData = catchAsync(async (req, res, next) => {

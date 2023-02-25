@@ -1,6 +1,6 @@
 import { Op, fn, col, literal } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import ErrorResponse from '../utils/errorResponse.js';
 
 class chatController {
   static getUsersRoom = (arr) => {

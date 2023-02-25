@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from '../utils/sendEmail.js';
 import { Op } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import ErrorResponse from '../utils/errorResponse.js';
 
 class authController {
   //SingUp Post API

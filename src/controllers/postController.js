@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { Op } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
-import ErrorResponse from '../utils/ErrorResponse.js';
+import ErrorResponse from '../utils/errorResponse.js';
 
 class postController {
   static getPosts = catchAsync(async (req, res, next) => {
