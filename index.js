@@ -22,7 +22,7 @@ await MySqlDB();
 app.use(json());
 
 app.get('/', (req, res) => {
-  res.send('Hello from express.');
+  res.status(200).send('Hello from express.');
 });
 
 app.use('/api', router);
