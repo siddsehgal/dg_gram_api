@@ -14,9 +14,8 @@ const corsOption = {
   origin: '*',
 };
 app.use(cors(corsOption));
-app.use(express.json({ urlEncoded: true }));
 
-ConnectSocket();
+// ConnectSocket();
 await MySqlDB();
 
 app.use(json());
