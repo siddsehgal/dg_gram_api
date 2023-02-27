@@ -1,11 +1,13 @@
 import 'dotenv/config';
 import express, { json } from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import router from './src/routes/index.js';
 import MySqlDB from './src/model/index.js';
 import GlobalExceptionHandler from './src/controllers/errorController.js';
 import ConnectSocket from './src/socket-controller/index.js';
 const app = express();
+const httpServer = createServer(app);
 
 // app.use(cookieParser());
 
@@ -15,7 +17,7 @@ const corsOption = {
 };
 app.use(cors(corsOption));
 
-ConnectSocket();
+ConnectSocket(httpServer);
 await MySqlDB();
 
 app.use(json());
@@ -28,6 +30,6 @@ app.use('/api', router);
 app.use(GlobalExceptionHandler);
 
 const PORT = process.env.PORT || 5500;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`server is running on ${PORT}`);
 });
