@@ -15,8 +15,8 @@ const corsOption = {
 };
 app.use(cors(corsOption));
 
-// ConnectSocket();
 await MySqlDB();
+ConnectSocket();
 
 app.use(json());
 
