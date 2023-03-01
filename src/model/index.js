@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+//  Models
 import User from './user.js';
 import Follower from './follower.js';
 import Post from './post.js';
@@ -8,26 +9,25 @@ import Chat from './chat.js';
 import UsersRoom from './usersRoom.js';
 
 const MySqlDB = async () => {
-  // import Config from "./config";
-
-  // Server Config Changed
-  const sequelize = new Sequelize({
-    database: process.env.MYSQL_DB,
-    username: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    host: process.env.MYSQL_HOST,
-    dialect: 'mysql',
-    logging: false,
-    dialectOptions: {
-      // useUTC: false,
-      dateStrings: true,
-      typeCast: true,
-    },
-    timezone: '+05:30',
-  });
   try {
+    // Connecting to database
+    const sequelize = new Sequelize({
+      database: process.env.MYSQL_DB,
+      username: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      host: process.env.MYSQL_HOST,
+      dialect: 'mysql',
+      logging: false,
+      dialectOptions: {
+        dateStrings: true,
+        typeCast: true,
+      },
+      timezone: '+05:30',
+    });
+
+    // Testing new Connection
     await sequelize.authenticate();
-    console.log('Connected to MySQL Database Successfully!!');
+    console.log('----Connected to MySQL Database Successfully----');
 
     const DB = {
       sequelize,
@@ -47,11 +47,14 @@ const MySqlDB = async () => {
       }
     });
 
+    // --Sync the Database with Models--
     // await sequelize.sync({ force: true });
+
     global.DB = DB;
   } catch (error) {
+    // Catching Connection Error
     console.log('MySqlDB Error: ', error);
-    console.log('Error in Connecting to MySQL');
+    console.log('----Error in Connecting to MySQL----');
   }
 };
 

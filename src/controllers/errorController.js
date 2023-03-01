@@ -1,9 +1,12 @@
 export default (err, req, res, next) => {
-    console.log(err);
+  // Handle Global unhandled exceptions
+  console.log('----Global Error Controller----');
+  console.log(err);
 
-    res.status(400).send({
-        message: 'Something went wrong on our end.',
-        error: err.toString(),
-        status: 'fail',
-    });
+  // Sending Error Response
+  res.status(500).send({
+    message: 'Something went wrong on our end.',
+    error: err.toString(),
+    status: 'fail',
+  });
 };

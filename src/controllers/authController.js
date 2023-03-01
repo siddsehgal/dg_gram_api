@@ -1,19 +1,20 @@
 import jwt from 'jsonwebtoken';
-import axios from 'axios';
 import bcrypt from 'bcrypt';
-import { sendEmail } from '../utils/sendEmail.js';
 import { Op } from 'sequelize';
+import { sendEmail } from '../utils/sendEmail.js';
 import catchAsync from '../utils/catchAsync.js';
 import ErrorResponse from '../utils/errorResponse.js';
 
 class authController {
-  //SingUp Post API
+  //SingUp  API
   static signup = catchAsync(async (req, res, next) => {
     const { full_name, email, password, confirmPassword } = req.body;
 
+    // Basic Non Empty Validation
     if (!full_name || !email || !password || !confirmPassword)
       return ErrorResponse({ message: 'All Fields are Required!!' }, 400, res);
 
+    // Compare 'Password' and 'Confirm Password'
     if (password !== confirmPassword)
       return ErrorResponse(
         { message: 'Password and Confirm Password Must be Same!!' },
@@ -21,16 +22,12 @@ class authController {
         res
       );
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-
+    // Checking if a User already exist with the same email
     let user = await global.DB.User.findOne({
       where: {
         email: email.toLowerCase(),
       },
     });
-
-    const OTP = Math.floor(100000 + Math.random() * 900000);
-
     if (user)
       return ErrorResponse(
         { message: 'User already exist with this email!!' },
@@ -38,6 +35,13 @@ class authController {
         res
       );
 
+    // Hashing the Password
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    // Generating a OTP
+    const OTP = Math.floor(100000 + Math.random() * 900000);
+
+    // Create a New User
     user = await global.DB.User.create({
       full_name: full_name,
       email,
@@ -46,6 +50,7 @@ class authController {
       isEmailVerified: false,
     });
 
+    // Create JWT
     const token = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET_KEY || 'TheSecretKey',
@@ -68,13 +73,13 @@ class authController {
   });
 
   // Login Post API
-  static login = catchAsync(async (req, res, next) => {
+  static signin = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
+    // Check if a User Exist with the email
     const user = await global.DB.User.findOne({
       where: { email: email },
     });
-
     if (!user)
       return ErrorResponse(
         { message: 'No User Exist with given Email Address!!' },
@@ -82,9 +87,11 @@ class authController {
         res
       );
 
+    // Compare 'Password' and 'Hashed Password'
     if (!bcrypt.compareSync(password, user.password))
       return ErrorResponse({ message: 'Incorrect Password!!' }, 400, res);
 
+    // Creating a JWT
     const token = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET_KEY || 'TheSecretKey',
@@ -102,8 +109,9 @@ class authController {
     });
   });
 
-  // Resend OTP
+  // Send OTP API
   static sendOTP = catchAsync(async (req, res, next) => {
+    // Fetched from the JWT in middleware
     const { email, isEmailVerified, OTP } = req.user;
 
     // Send Mail
@@ -122,21 +130,25 @@ class authController {
     });
   });
 
-  // Verify OTP
+  // Verify OTP API
   static verifyOTP = catchAsync(async (req, res, next) => {
-    const { id, OTP } = req.user;
-    const user = req.user;
     const { otpEntered } = req.body;
 
+    // Fetched from the JWT in middleware
+    const user = req.user;
+
+    // Basic Non Empty Validation
     if (!otpEntered)
       return ErrorResponse({ message: 'Otp is Required!!' }, 400, res);
 
-    if (OTP != otpEntered)
+    // Compare 'User Entered Otp' and 'Database Otp'
+    if (user.OTP != otpEntered)
       return res.status(200).send({
         status: 'fail',
         message: 'OTP does not Match!!',
       });
 
+    // Update User
     await user.update({ isEmailVerified: true });
     await user.reload();
 
@@ -147,7 +159,7 @@ class authController {
     });
   });
 
-  // Check Login
+  // Check Login API
   static checkLogin = catchAsync(async (req, res, next) => {
     const { id, user_name, isEmailVerified, email } = req.user;
 
@@ -163,13 +175,17 @@ class authController {
   });
 
   // Set UserName
-  static setUserName = catchAsync(async (req, res, next) => {
-    const { id: req_user_id } = req.user;
+  static updateUserName = catchAsync(async (req, res, next) => {
     const { userName } = req.body;
 
+    // Fetch User Data from JWT
+    const { id: req_user_id } = req.user;
+
+    // Basic Non Empty Validation
     if (!userName)
       return ErrorResponse({ message: 'UserName is Required' }, 400, res);
 
+    // Check if User Name is not already in use
     const checkUserName = await global.DB.User.findOne({
       where: {
         user_name: userName,
@@ -177,7 +193,6 @@ class authController {
       },
       attributes: ['id'],
     });
-
     if (checkUserName)
       return ErrorResponse(
         { message: 'This UserName is already taken. Try different UserName.' },
@@ -185,6 +200,7 @@ class authController {
         res
       );
 
+    // Update UserName
     await global.DB.User.update(
       { user_name: userName },
       { where: { id: req_user_id } }
@@ -196,17 +212,21 @@ class authController {
     });
   });
 
+  // Update User Email Address
   static updateEmail = catchAsync(async (req, res, next) => {
-    const { id } = req.user;
     const { email } = req.body;
 
+    // Fetched User from JWT
+    const { id } = req.user;
+
+    // Basic Non Empty Validation
     if (!email)
       return ErrorResponse({ message: 'Email is Required!!' }, 400, res);
 
+    // Check if Email is not already in Use
     const checkEmail = await global.DB.User.findOne({
       where: { email, id: { [Op.ne]: id } },
     });
-
     if (checkEmail) {
       return ErrorResponse(
         { message: 'Email Address already in Use!!' },
@@ -215,6 +235,7 @@ class authController {
       );
     }
 
+    // Update Email Address
     await global.DB.User.update({ email }, { where: { id } });
 
     res.status(200).send({
@@ -222,16 +243,19 @@ class authController {
       message: 'Email Successfully Updated!!',
     });
   });
-  // JWT Verify
 
+  // Middleware for User Authentication from JWT
   static jwtVerify = catchAsync(async (req, res, next) => {
     let token = null;
+
+    // Checking if token is Provided in the Headers
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer')
     )
       token = req.headers.authorization.split(' ')[1];
 
+    // If no Token then throw Error
     if (!token)
       return res.status(401).send({
         status: 'fail',
@@ -241,12 +265,14 @@ class authController {
       });
 
     try {
+      // Decode the token
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET_KEY || 'TheSecretKey'
       );
       const { id } = decoded;
 
+      // Find if User Exists
       const user = await global.DB.User.findOne({
         where: { id },
         attributes: [
@@ -259,6 +285,7 @@ class authController {
         ],
       });
 
+      // If no User Then Throw Error
       if (!user)
         return ErrorResponse(
           { message: 'No User Found!!', tokenError: true },
@@ -266,13 +293,14 @@ class authController {
           res
         );
 
-      // console.log(req);
-
+      // Set User in 'req' to access it in the next controller
       req.user = user;
       next();
     } catch (error) {
+      // Error in Decoding Token
       console.log(error);
 
+      // Throw ErrorResponse
       return ErrorResponse(
         { message: 'Invalid Token Provided!!', tokenError: true },
         401,
@@ -280,181 +308,6 @@ class authController {
       );
     }
   });
-
-  // // Get Google SignIn Link
-  // static getGoogleLoginLink = async (req, res) => {
-  //   const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-  //   const options = {
-  //     redirect_uri: `${process.env.ROOT_URL}${process.env.GOOGLE_REDIRECT_URI}`,
-  //     client_id: process.env.GOOGLE_CLIENT_ID,
-  //     access_type: 'offline',
-  //     response_type: 'code',
-  //     prompt: 'consent',
-  //     scope: [
-  //       'https://www.googleapis.com/auth/userinfo.profile',
-  //       'https://www.googleapis.com/auth/userinfo.email',
-  //     ].join(' '),
-  //   };
-  //   const googleAuthURL = `${rootUrl}?${new URLSearchParams(
-  //     options
-  //   ).toString()}`;
-
-  //   return res.send(googleAuthURL);
-  // };
-
-  // // Verify Google SignIn
-  // static googleLoginVerify = async (req, res) => {
-  //   const code = req.query.code;
-
-  //   const queryOption = {
-  //     code,
-  //     client_id: process.env.GOOGLE_CLIENT_ID,
-  //     client_secret: process.env.GOOGLE_CLIENT_SECRET,
-  //     redirect_uri: `${process.env.ROOT_URL}${process.env.GOOGLE_REDIRECT_URI}`,
-  //     grant_type: 'authorization_code',
-  //   };
-
-  //   let tokenReqOptions = {
-  //     url: `https://oauth2.googleapis.com/token?${new URLSearchParams(
-  //       queryOption
-  //     ).toString()}`,
-  //     method: 'POST',
-  //   };
-
-  //   let tokens = await axios.request(tokenReqOptions).catch((error) => {
-  //     return { isError: true, error: error.response.data };
-  //   });
-
-  //   if (tokens.isError)
-  //     return res.status(200).send({
-  //       message: `Failed to fetch auth tokens`,
-  //       error: tokens.error,
-  //     });
-
-  //   const { id_token, access_token } = tokens.data;
-
-  //   let userReqOptions = {
-  //     url: `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&${new URLSearchParams(
-  //       {
-  //         access_token,
-  //       }
-  //     ).toString()}`,
-  //     method: 'GET',
-  //     headers: {
-  //       Authorization: `Bearer ${id_token}`,
-  //     },
-  //   };
-
-  //   let googleUser = await axios.request(userReqOptions).catch((error) => {
-  //     return { isError: true, error: error.response.data };
-  //   });
-
-  //   if (googleUser.isError)
-  //     return res.status(200).send({
-  //       message: `Failed to fetch user`,
-  //       error: googleUser.error,
-  //     });
-
-  //   const { email, name } = googleUser.data;
-
-  //   let user = await global.DB.User.findOne({ email: email.toLowerCase() });
-
-  //   if (!user) {
-  //     const newUser = new global.DB.User({
-  //       userName: name,
-  //       email: email,
-  //     });
-
-  //     user = await newUser.save();
-  //   }
-
-  //   const token = jwt.sign(
-  //     { id: user._id },
-  //     process.env.JWT_SECRET_KEY || 'TheSecretKey',
-  //     { expiresIn: process.env.JWT_EXP_TIME || '24h' }
-  //   );
-
-  //   res.status(200).send({ message: 'Login Successfully', token, user });
-  // };
-
-  // // Get Facebook SignIn Link
-  // static getFacebookLoginLink = async (req, res) => {
-  //   const rootUrl = 'https://www.facebook.com/v14.0/dialog/oauth';
-  //   const options = {
-  //     redirect_uri: `${process.env.ROOT_URL}${process.env.FACEBOOK_REDIRECT_URI}`,
-  //     client_id: process.env.FACEBOOK_CLIENT_ID,
-  //   };
-  //   const facebookAuthURL = `${rootUrl}?${new URLSearchParams(
-  //     options
-  //   ).toString()}`;
-
-  //   return res.send({ options, facebookAuthURL });
-  // };
-
-  // // Verify Facebook SignIn
-  // static facebookLoginVerify = async (req, res) => {
-  //   const code = req.query.code;
-
-  //   let queryOption = {
-  //     client_id: process.env.FACEBOOK_CLIENT_ID,
-  //     redirect_uri: `${process.env.ROOT_URL}${process.env.FACEBOOK_REDIRECT_URI}`,
-  //     client_secret: process.env.FACEBOOK_CLIENT_SECRET,
-  //     code,
-  //   };
-  //   let tokenReqOptions = {
-  //     url: `https://graph.facebook.com/v14.0/oauth/access_token?${new URLSearchParams(
-  //       queryOption
-  //     ).toString()}`,
-  //     method: 'GET',
-  //   };
-
-  //   let tokenRes = await axios.request(tokenReqOptions).catch((error) => {
-  //     return { isError: true, error: error.response.data };
-  //   });
-
-  //   if (tokenRes.isError) return res.status(200).send({ data: tokenRes.error });
-
-  //   const { access_token } = tokenRes.data;
-
-  //   let userDataQueryOptions = {
-  //     fields: 'email,name',
-  //     access_token,
-  //   };
-
-  //   let userDataReqOptions = {
-  //     url: `https://graph.facebook.com/me?${new URLSearchParams(
-  //       userDataQueryOptions
-  //     ).toString()}`,
-  //     method: 'GET',
-  //   };
-
-  //   let userData = await axios.request(userDataReqOptions).catch((error) => {
-  //     return { isError: true, error: error.response.data };
-  //   });
-
-  //   if (userData.isError) return res.status(200).send({ data: userData.error });
-
-  //   const { email, name, id } = userData.data;
-
-  //   let user = await global.DB.User.findOne({ email: email.toLowerCase() });
-
-  //   if (!user) {
-  //     const newUser = new global.DB.User({
-  //       userName: name,
-  //       email: email,
-  //     });
-
-  //     user = await newUser.save();
-  //   }
-
-  //   const token = jwt.sign(
-  //     { id: user._id },
-  //     process.env.JWT_SECRET_KEY || 'TheSecretKey',
-  //     { expiresIn: process.env.JWT_EXP_TIME || '24h' }
-  //   );
-
-  //   res.status(200).send({ message: 'Login Successfully', token, user });
-  // };
 }
 
 export default authController;

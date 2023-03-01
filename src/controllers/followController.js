@@ -1,29 +1,31 @@
-import jwt from 'jsonwebtoken';
-import axios from 'axios';
-import { Op } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
 import ErrorResponse from '../utils/errorResponse.js';
 
 class followController {
-  // Follow a User
+  // Follow a User API
   static follow = catchAsync(async (req, res, next) => {
+    // User Id of User to Follow
     const { user_id } = req.query;
+
+    // Fetch User from JWT
     const user = req.user;
 
+    // Check if User Exist with the User Id
     const checkUser = await global.DB.User.findOne({ where: { id: user_id } });
     if (!checkUser)
       return ErrorResponse({ message: 'user Not Found!!' }, 404, res);
 
+    // Check if they already follow
     const isAlreadyFollowed = await global.DB.Follower.findOne({
       where: {
         user_id,
         follower_id: user.id,
       },
     });
-
     if (isAlreadyFollowed)
       return ErrorResponse({ message: 'Already Following' }, 400, res);
 
+    // Creating Entry for Follow in the Database
     const follow = await global.DB.Follower.create({
       user_id: Number(user_id),
       follower_id: user.id,
@@ -36,21 +38,26 @@ class followController {
     });
   });
 
-  // Unfollow a User
+  // Unfollow a User API
   static unFollow = catchAsync(async (req, res, next) => {
+    // User Id of User to Un-Follow
     const { user_id } = req.query;
+
+    // Fetch User from JWT
     const user = req.user;
 
+    // Check if they are following or not
     const isAlreadyFollowed = await global.DB.Follower.findOne({
       where: {
         user_id: user_id,
         follower_id: user.id,
       },
     });
-
+    // If Not Following then Throw Error
     if (!isAlreadyFollowed)
       return ErrorResponse({ message: 'Not already Following' }, 400, res);
 
+    // Delete Follow Entry from Database
     await isAlreadyFollowed.destroy();
 
     res.send({
@@ -58,30 +65,6 @@ class followController {
       message: 'Un-Followed Successfully',
     });
   });
-
-  //   // Get Following Users List
-  //   static followingUsers = catchAsync(async (req, res, next) => {
-  //     const followingUsers = await global.DB.Follower.findAll({
-  //       where: {
-  //         follower_id: req.user.id,
-  //         status: '1',
-  //       },
-  //       attributes: ['id', 'user_id', 'status'],
-  //       include: [
-  //         {
-  //           model: global.DB.User,
-  //           as: 'user',
-  //           attributes: ['id', 'name', 'user_name'],
-  //         },
-  //       ],
-  //     });
-
-  //     res.send({
-  //       status: 'success',
-  //       message: 'UnFolllowed Successfully',
-  //       followingUsers,
-  //     });
-  //   });
 }
 
 export default followController;

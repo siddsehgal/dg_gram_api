@@ -1,30 +1,22 @@
 import express from 'express';
+// Controller
 import authController from '../controllers/authController.js';
+
+// Initialize Express Router
 const router = express.Router();
 
-router.post('/signin', authController.login);
+// Unprotected routes
+router.post('/signin', authController.signin);
 router.post('/signup', authController.signup);
 
+// Middleware for Authentication from JWT
 router.use(authController.jwtVerify);
+
+// Protected routes
 router.get('/resend-otp', authController.sendOTP);
 router.post('/verify-otp', authController.verifyOTP);
 router.get('/check-login', authController.checkLogin);
-router.patch('/update-user-name', authController.setUserName);
+router.patch('/update-user-name', authController.updateUserName);
 router.patch('/update-email', authController.updateEmail);
-
-// router.get('/google-login-link', authController.getGoogleLoginLink);
-
-// router.get('/google', (req, res) => {
-//   res.send(req.query);
-// });
-// router.get('/google-login-verify', authController.googleLoginVerify);
-
-// router.get('/facebook-login-link', authController.getFacebookLoginLink);
-
-// router.get('/facebook', (req, res) => {
-//   res.send(req.query);
-// });
-
-// router.get('/facebook-login-verify', authController.facebookLoginVerify);
 
 export default router;

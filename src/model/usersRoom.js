@@ -30,10 +30,8 @@ const InitModel = (connection) => {
       tableName: 'users_rooms',
     }
   );
-  console.log('UsersRoom Model Running');
 
-  // await UsersRoom.sync({ alter: true });
   return UsersRoom;
 };
-// export { UsersRoom as UsersRoomType };
+
 export default InitModel;

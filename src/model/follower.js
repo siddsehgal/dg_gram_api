@@ -34,9 +34,7 @@ const InitModel = (connection) => {
       tableName: 'follower',
     }
   );
-  console.log('Follower Model Running');
 
-  // await Follower.sync({ alter: true });
   return Follower;
 };
 

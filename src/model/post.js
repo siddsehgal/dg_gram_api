@@ -53,9 +53,6 @@ const InitModel = (connection) => {
     }
   );
 
-  console.log('Post Model Running');
-
-  // await Post.sync({ alter: true });
   return Post;
 };
 

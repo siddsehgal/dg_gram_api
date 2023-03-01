@@ -38,9 +38,7 @@ const InitModel = (connection) => {
       tableName: 'post_comments',
     }
   );
-  console.log('PostComment Model Running');
 
-  // await PostComment.sync({ alter: true });
   return PostComment;
 };
 export { PostComment as PostCommentModelType };

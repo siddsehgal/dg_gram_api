@@ -1,14 +1,18 @@
-import jwt from 'jsonwebtoken';
-import axios from 'axios';
 import { Op } from 'sequelize';
 import catchAsync from '../utils/catchAsync.js';
 import ErrorResponse from '../utils/errorResponse.js';
 
 class postController {
+  // Get Post API
   static getPosts = catchAsync(async (req, res, next) => {
+    // Fetch User from JWT
     const user = req.user;
+
+    // Destructure Properties from Request Query
     const { post_id, user_id, following } = req.query;
 
+    // Get User Ids of User I am following
+    // Only if 'following' is true
     const followedUsersIds =
       following == 'true'
         ? (
@@ -19,6 +23,7 @@ class postController {
           ).map((item) => item.user_id)
         : [];
 
+    // Fetch Posts from Database
     const posts = await global.DB.Post.findAll({
       where: {
         ...(post_id
@@ -36,7 +41,6 @@ class postController {
         {
           model: global.DB.PostLike,
           as: 'post_likes',
-          // where: { user_id: user.id },
           required: false,
           attributes: ['id', 'user_id'],
         },
@@ -49,8 +53,7 @@ class postController {
       order: [['createdAt', 'desc']],
     });
 
-    // const post_like_count = await PostLike.count({ where: { post_id: post.id } });
-
+    // Insert Likes Count and Is this Self Post in the Response
     const postRes = posts.map((item) => {
       return {
         ...item.toJSON(),
@@ -69,15 +72,21 @@ class postController {
     });
   });
 
+  // Create New Post API
   static createPosts = catchAsync(async (req, res, next) => {
+    // Fetched User from JWT
     const user = req.user;
+
+    // Post Content from Request Body
     const { content } = req.body;
 
+    // Initialize Post object
     const postObj = {
       user_id: user.id,
       content,
     };
 
+    // Create Post in the database
     const post = await global.DB.Post.create(postObj);
 
     res.status(201).json({
@@ -86,10 +95,16 @@ class postController {
       response: { post },
     });
   });
+
+  // Delete a Post API
   static deletePosts = catchAsync(async (req, res, next) => {
+    // Fetched User form JWT
     const user = req.user;
+
+    // Post Id to delete from Request Query
     const { post_id } = req.query;
 
+    // Check if Post belongs to the Same User
     const post = await global.DB.Post.findOne({
       where: {
         id: post_id,
@@ -97,8 +112,10 @@ class postController {
       },
     });
 
+    // If Post doesn't belong to the same User then throw Error
     if (!post) return ErrorResponse({ message: 'Post not Found' }, 400, res);
 
+    // Delete Post from the Database
     await post.destroy();
 
     res.send({
@@ -107,22 +124,31 @@ class postController {
     });
   });
 
+  // Like a Post API
   static createPostLike = catchAsync(async (req, res, next) => {
+    // Fetched User form JWT
     const user = req.user;
+
+    // Post Id to Like from Request Query
     const { post_id } = req.query;
 
+    // Basic Non Empty Validation
     if (!Number(post_id))
       return ErrorResponse({ message: 'post_id is Required!!' }, 400, res);
 
+    // Check if Post Exists
     const post = await global.DB.Post.findOne({ where: { id: post_id } });
 
+    // If Post not Exists then Throw Error
     if (!post) return ErrorResponse({ message: 'No post found!!' }, 404, res);
 
+    // Initialize Post Like Object
     const postLikeObj = {
       user_id: user.id,
       post_id: Number(post_id),
     };
 
+    // Create Post Like Entry in the Database
     const postLike = await global.DB.PostLike.create(postLikeObj);
 
     res.status(201).json({
@@ -132,17 +158,24 @@ class postController {
     });
   });
 
+  // Remove Like from a Post API
   static deletePostLike = catchAsync(async (req, res, next) => {
+    // Fetched User from JWT
     const user = req.user;
+    // Post Id to Remove Like from Request Query
     const { post_id } = req.query;
 
+    // Basic Non Empty Validation
     if (!Number(post_id))
       return ErrorResponse({ message: 'post_id is Required!!' }, 400, res);
 
+    // Check If Post Exists in the Database
     const post = await global.DB.Post.findOne({ where: { id: post_id } });
 
+    // If not then Throw Error
     if (!post) return ErrorResponse({ message: 'No post found!!' }, 404, res);
 
+    // Delete Post Like from Database
     const postLike = await global.DB.PostLike.destroy({
       where: { user_id: user.id, post_id },
     });

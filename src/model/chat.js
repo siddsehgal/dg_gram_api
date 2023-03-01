@@ -47,9 +47,6 @@ const InitModel = (connection) => {
     }
   );
 
-  console.log('Chat Model Running');
-
-  // await Chat.sync({ alter: true });
   return Chat;
 };
 

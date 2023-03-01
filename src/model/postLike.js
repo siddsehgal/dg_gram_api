@@ -34,9 +34,7 @@ const InitModel = (connection) => {
       tableName: 'post_likes',
     }
   );
-  console.log('PostLike Model Running');
 
-  // await PostLike.sync({ alter: true });
   return PostLike;
 };
 

@@ -55,9 +55,6 @@ const InitModel = (connection) => {
       tableName: 'users',
     }
   );
-  console.log('User Model Running');
-
-  // await User.sync({ alter: true });
   return User;
 };
 
